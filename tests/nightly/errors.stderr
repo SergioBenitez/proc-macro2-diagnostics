@@ -1,0 +1,50 @@
+error: this is an error message
+ --> $DIR/errors.rs:6:12
+  |
+6 |     error: this is an error message,
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: this is an error message
+  --> $DIR/errors.rs:10:12
+   |
+10 |     error: this is an error message,
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: but it has a note
+
+error: hello
+  --> $DIR/errors.rs:15:12
+   |
+15 |     error: hello,
+   |            ^^^^^
+   |
+warning: just wanted to warn you
+  --> $DIR/errors.rs:16:14
+   |
+16 |     warning: just wanted to warn you,
+   |              ^^^^^^^^^^^^^^^^^^^^^^^
+note: just jotting things down
+  --> $DIR/errors.rs:17:11
+   |
+17 |     note: just jotting things down,
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: please help on that note
+   = note: notes on notes
+
+warning: hello not found
+  --> $DIR/errors.rs:23:14
+   |
+23 |     warning: hello not found,
+   |              ^^^^^^^^^^^^^^^
+   |
+   = note: just a note to say hi
+   = help: its a good idea to say hello
+
+error: unknown diagnostic kind
+  --> $DIR/errors.rs:29:5
+   |
+29 |     hello: hello,
+   |     ^^^^^
+   |
+   = help: expected one of: 'error', 'warning', 'note', 'help'
+   = note: or their _ versions

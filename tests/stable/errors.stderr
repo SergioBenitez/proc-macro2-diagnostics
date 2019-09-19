@@ -1,0 +1,83 @@
+error: this is an error message
+ --> $DIR/errors.rs:6:12
+  |
+6 |     error: this is an error message,
+  |            ^^^^
+
+error: this is an error message
+  --> $DIR/errors.rs:10:12
+   |
+10 |     error: this is an error message,
+   |            ^^^^
+
+error: [<- note] but it has a note
+  --> $DIR/errors.rs:10:12
+   |
+10 |     error: this is an error message,
+   |            ^^^^
+
+error: hello
+  --> $DIR/errors.rs:15:12
+   |
+15 |     error: hello,
+   |            ^^^^^
+
+error: [warning] just wanted to warn you
+  --> $DIR/errors.rs:16:14
+   |
+16 |     warning: just wanted to warn you,
+   |              ^^^^
+
+error: [note] just jotting things down
+  --> $DIR/errors.rs:17:11
+   |
+17 |     note: just jotting things down,
+   |           ^^^^
+
+error: [<- help] please help on that note
+  --> $DIR/errors.rs:15:12
+   |
+15 |     error: hello,
+   |            ^^^^^
+
+error: [<- note] notes on notes
+  --> $DIR/errors.rs:15:12
+   |
+15 |     error: hello,
+   |            ^^^^^
+
+error: [warning] hello not found
+  --> $DIR/errors.rs:23:14
+   |
+23 |     warning: hello not found,
+   |              ^^^^^
+
+error: [<- note] just a note to say hi
+  --> $DIR/errors.rs:23:14
+   |
+23 |     warning: hello not found,
+   |              ^^^^^
+
+error: [<- help] its a good idea to say hello
+  --> $DIR/errors.rs:23:14
+   |
+23 |     warning: hello not found,
+   |              ^^^^^
+
+error: unknown diagnostic kind
+  --> $DIR/errors.rs:29:5
+   |
+29 |     hello: hello,
+   |     ^^^^^
+
+error: [<- help] expected one of: 'error', 'warning', 'note', 'help'
+  --> $DIR/errors.rs:29:5
+   |
+29 |     hello: hello,
+   |     ^^^^^
+
+error: [<- note] or their _ versions
+  --> $DIR/errors.rs:29:5
+   |
+29 |     hello: hello,
+   |     ^^^^^
