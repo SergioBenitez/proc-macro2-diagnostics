@@ -89,6 +89,11 @@ impl Diagnostic {
     diagnostic_child_methods!(span_note, note, Level::Note);
     diagnostic_child_methods!(span_help, help, Level::Help);
 
+    /// Return the `level` of `self`.
+    pub fn level(&self) -> Level {
+        self.level
+    }
+
     /// Emit the diagnostic.
     pub fn emit_as_tokens(self) -> TokenStream {
         let syn_error: syn::parse::Error = self.into();

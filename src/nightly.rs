@@ -32,6 +32,19 @@ impl Into<proc_macro::Level> for Level {
     }
 }
 
+#[doc(hidden)]
+impl From<proc_macro::Level> for Level {
+    fn from(ext_level: proc_macro::Level) -> Level {
+        match ext_level {
+            proc_macro::Level::Error => Level::Error,
+            proc_macro::Level::Warning => Level::Warning,
+            proc_macro::Level::Note => Level::Note,
+            proc_macro::Level::Help => Level::Help,
+            _ => unimplemented!("unknown level: {:?}", ext_level)
+        }
+    }
+}
+
 /// A structure representing a diagnostic message and associated children
 /// messages.
 #[derive(Debug, Clone)]
@@ -105,6 +118,11 @@ impl Diagnostic {
     diagnostic_child_methods!(span_warning, warning);
     diagnostic_child_methods!(span_note, note);
     diagnostic_child_methods!(span_help, help);
+
+    /// Return the `level` of `self`.
+    pub fn level(&self) -> Level {
+        self.0.level().into()
+    }
 
     /// Emit the diagnostic.
     pub fn emit_as_tokens(self) -> TokenStream {
