@@ -57,7 +57,6 @@ impl syn::parse::Parse for Item {
         let mut span = input.cursor().span();
         while !input.peek(syn::Token![,]) && !input.is_empty() {
             let ident = input.parse::<syn::Ident>()?;
-            // FIXME: Always returns `None` on stable! Panics!
             span = match span.join(ident.span()) {
                 Some(span) => span,
                 None => span
