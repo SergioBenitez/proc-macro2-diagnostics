@@ -2,7 +2,7 @@
 extern crate proc_macro;
 
 use proc_macro2::Span;
-use proc_macro2_diagnostics::{SpanDiagExt, Diagnostic, Level};
+use proc_macro2_diagnostics::{SpanDiagnosticExt, Diagnostic, Level};
 
 struct Invocation {
     items: syn::punctuated::Punctuated<Item, syn::Token![,]>,

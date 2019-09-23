@@ -1,6 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 
-use crate::SpanDiagExt;
+use crate::SpanDiagnosticExt;
 
 /// Trait implemented by types that can be converted into a set of `Span`s.
 pub trait MultiSpan {

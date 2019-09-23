@@ -2,7 +2,7 @@ use proc_macro2::Span;
 
 use crate::diagnostic::{Level, Diagnostic};
 
-pub trait SpanDiagExt {
+pub trait SpanDiagnosticExt {
     fn error<T: Into<String>>(self, message: T) -> Diagnostic;
     fn warning<T: Into<String>>(self, message: T) -> Diagnostic;
     fn note<T: Into<String>>(self, message: T) -> Diagnostic;
@@ -19,7 +19,7 @@ macro_rules! diagnostic_method {
     )
 }
 
-impl SpanDiagExt for Span {
+impl SpanDiagnosticExt for Span {
     diagnostic_method!(error, Level::Error);
     diagnostic_method!(warning, Level::Warning);
     diagnostic_method!(note, Level::Note);

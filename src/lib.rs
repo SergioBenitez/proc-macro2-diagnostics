@@ -6,7 +6,7 @@ mod ext;
 mod diagnostic;
 
 pub use diagnostic::{Diagnostic, Level};
-pub use ext::SpanDiagExt;
+pub use ext::SpanDiagnosticExt;
 
 // We stole this from proc_macro2. Checks whether nightly proc_macro things
 // _actually_ work by checking if calls to proc_macro::Span panic.
