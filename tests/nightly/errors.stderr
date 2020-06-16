@@ -48,3 +48,5 @@ error: unknown diagnostic kind
    |
    = help: expected one of: 'error', 'warning', 'note', 'help'
    = note: or their _ versions
+
+error: could not compile `proc-macro2-diagnostics-tests`.

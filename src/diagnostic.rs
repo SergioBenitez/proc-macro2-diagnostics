@@ -23,6 +23,7 @@ impl<'a> MultiSpan for &'a [Span] {
 }
 
 /// An enum representing a diagnostic level.
+#[non_exhaustive]
 #[derive(Copy, Clone, Debug)]
 pub enum Level {
     /// An error.
@@ -33,8 +34,17 @@ pub enum Level {
     Note,
     /// A help message.
     Help,
-    #[doc(hidden)]
-    __NonExhaustive
+}
+
+impl std::fmt::Display for Level {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Level::Error => write!(f, "error"),
+            Level::Warning => write!(f, "warning"),
+            Level::Note => write!(f, "note"),
+            Level::Help => write!(f, "help"),
+        }
+    }
 }
 
 /// A structure representing a diagnostic message and associated children
@@ -135,10 +145,11 @@ const WARN_PREFIX: &str = "[warning] ";
 const NOTE_PREFIX: &str = "[note] ";
 const HELP_PREFIX: &str = "[help] ";
 
-const JOINED_WARN_PREFIX: &str = "[<- warning] ";
-const JOINED_NOTE_PREFIX: &str = "[<- note] ";
-const JOINED_HELP_PREFIX: &str = "[<- help] ";
-const JOINED_ERROR_PREFIX: &str = "[<- error] ";
+const JOINED_WARN_PREFIX: &str = "--- warning: ";
+const JOINED_NOTE_PREFIX: &str = "--- note: ";
+const JOINED_HELP_PREFIX: &str = "--- help: ";
+const JOINED_ERROR_PREFIX: &str = "--- error: ";
+
 
 impl Into<syn::parse::Error> for Diagnostic {
     fn into(self) -> syn::parse::Error {
@@ -159,62 +170,71 @@ impl Into<syn::parse::Error> for Diagnostic {
         }
 
         fn diag_to_span(diag: &Diagnostic) -> Span {
-            let spans = &diag.spans;
-            if spans.is_empty() {
-                Span::call_site()
+            diag.spans.get(0).cloned().unwrap_or_else(|| Span::call_site())
+        }
+
+        let mut span = diag_to_span(&self);
+        let mut msg = diag_to_msg(&self);
+        let mut error: Option<syn::Error> = None;
+        for child in self.children {
+            if child.spans.is_empty() {
+                msg.push_str(&format!("\n  {}", diag_to_msg(&child)));
             } else {
-                spans[0]
+                let new_error = syn::parse::Error::new(span, &msg);
+                if let Some(ref mut error) = error {
+                    error.combine(new_error);
+                } else {
+                    error = Some(new_error);
+                }
+
+                span = diag_to_span(&child);
+                msg = diag_to_msg(&child);
             }
         }
 
-        let span = diag_to_span(&self);
-        let mut error = syn::parse::Error::new(span, diag_to_msg(&self));
-        for child in self.children {
-            let child_error = if child.spans.is_empty() {
-                syn::parse::Error::new(span, diag_to_msg(&child))
-            } else {
-                syn::parse::Error::new(diag_to_span(&child), diag_to_msg(&child))
-            };
-
-            error.combine(child_error);
+        if let Some(mut error) = error {
+            error.combine(syn::parse::Error::new(span, &msg));
+            error
+        } else {
+            syn::parse::Error::new(span, &msg)
         }
-
-        error
     }
 }
 
 impl From<syn::parse::Error> for Diagnostic {
     fn from(error: syn::parse::Error) -> Diagnostic {
-        let mut diag = error.span().error(error.to_string());
-        for e in error.into_iter().skip(1) {
-            let message = e.to_string();
-            if message.starts_with(WARN_PREFIX) {
-                let message = &message[WARN_PREFIX.len()..];
-                diag = diag.span_warning(e.span(), message.to_string());
-            } else if message.starts_with(JOINED_WARN_PREFIX) {
-                let message = &message[JOINED_WARN_PREFIX.len()..];
-                diag = diag.warning(message.to_string());
-            } else if message.starts_with(NOTE_PREFIX) {
-                let message = &message[NOTE_PREFIX.len()..];
-                diag = diag.span_note(e.span(), message.to_string());
-            } else if message.starts_with(JOINED_NOTE_PREFIX) {
-                let message = &message[JOINED_NOTE_PREFIX.len()..];
-                diag = diag.note(message.to_string());
-            } else if message.starts_with(HELP_PREFIX) {
-                let message = &message[HELP_PREFIX.len()..];
-                diag = diag.span_help(e.span(), message.to_string());
-            } else if message.starts_with(JOINED_HELP_PREFIX) {
-                let message = &message[JOINED_HELP_PREFIX.len()..];
-                diag = diag.help(message.to_string());
-            } else if message.starts_with(JOINED_ERROR_PREFIX) {
-                let message = &message[JOINED_ERROR_PREFIX.len()..];
-                diag = diag.error(message.to_string());
-            } else {
-                diag = diag.span_error(e.span(), e.to_string());
+        let mut diag: Option<Diagnostic> = None;
+        for e in &error {
+            for line in e.to_string().lines() {
+                let msg = line.trim_start();
+                if msg.starts_with(JOINED_WARN_PREFIX) {
+                    let msg = &msg[JOINED_WARN_PREFIX.len()..];
+                    diag = diag.map(|d| d.warning(msg));
+                } else if msg.starts_with(JOINED_NOTE_PREFIX) {
+                    let msg = &msg[JOINED_NOTE_PREFIX.len()..];
+                    diag = diag.map(|d| d.note(msg));
+                } else if msg.starts_with(JOINED_HELP_PREFIX) {
+                    let msg = &msg[JOINED_HELP_PREFIX.len()..];
+                    diag = diag.map(|d| d.help(msg));
+                } else if msg.starts_with(JOINED_ERROR_PREFIX) {
+                    let msg = &msg[JOINED_ERROR_PREFIX.len()..];
+                    diag = diag.map(|d| d.error(msg));
+                } else if msg.starts_with(WARN_PREFIX) {
+                    let msg = &msg[WARN_PREFIX.len()..];
+                    diag = diag.map(|d| d.span_warning(e.span(), msg)).or_else(|| Some(e.span().warning(msg)));
+                } else if msg.starts_with(NOTE_PREFIX) {
+                    let msg = &msg[NOTE_PREFIX.len()..];
+                    diag = diag.map(|d| d.span_note(e.span(), msg)).or_else(|| Some(e.span().note(msg)));
+                } else if msg.starts_with(HELP_PREFIX) {
+                    let msg = &msg[HELP_PREFIX.len()..];
+                    diag = diag.map(|d| d.span_help(e.span(), msg)).or_else(|| Some(e.span().help(msg)));
+                } else {
+                    diag = diag.map(|d| d.span_error(e.span(), line)).or_else(|| Some(e.span().error(line)));
+                }
             }
         }
 
-        diag
+        diag.unwrap_or_else(|| error.span().error(error.to_string()))
     }
 }
 
@@ -234,7 +254,6 @@ impl Into<proc_macro::Diagnostic> for Diagnostic {
             Level::Warning => proc_macro::Level::Warning,
             Level::Note => proc_macro::Level::Note,
             Level::Help => proc_macro::Level::Help,
-            Level::__NonExhaustive => unreachable!("{:?}", self.level),
         };
 
         let mut diag = proc_macro::Diagnostic::spanned(spans, level, self.message);
@@ -246,7 +265,6 @@ impl Into<proc_macro::Diagnostic> for Diagnostic {
                 Level::Warning => diag.span_warning(spans, child.message),
                 Level::Note => diag.span_note(spans, child.message),
                 Level::Help => diag.span_help(spans, child.message),
-                Level::__NonExhaustive => unreachable!("{:?}", child.level),
             };
         }
 
