@@ -2,6 +2,7 @@ use proc_macro2::{Span, TokenStream};
 
 use crate::SpanDiagnosticExt;
 
+
 /// Trait implemented by types that can be converted into a set of `Span`s.
 pub trait MultiSpan {
     /// Converts `self` into a `Vec<Span>`.
@@ -24,7 +25,7 @@ impl<'a> MultiSpan for &'a [Span] {
 
 /// An enum representing a diagnostic level.
 #[non_exhaustive]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Level {
     /// An error.
     Error,
@@ -36,14 +37,71 @@ pub enum Level {
     Help,
 }
 
+impl std::str::FromStr for Level {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.contains(Level::Error.as_str()) {
+            Ok(Level::Error)
+        } else if s.contains(Level::Warning.as_str()) {
+            Ok(Level::Warning)
+        } else if s.contains(Level::Note.as_str()) {
+            Ok(Level::Note)
+        } else if s.contains(Level::Help.as_str()) {
+            Ok(Level::Help)
+        } else {
+            Err(())
+        }
+    }
+}
+
+impl Level {
+    fn as_str(self) -> &'static str {
+        match self {
+            Level::Error => "error",
+            Level::Warning => "warning",
+            Level::Note => "note",
+            Level::Help => "help",
+        }
+    }
+}
+
 impl std::fmt::Display for Level {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Level::Error => write!(f, "error"),
-            Level::Warning => write!(f, "warning"),
-            Level::Note => write!(f, "note"),
-            Level::Help => write!(f, "help"),
-        }
+        self.as_str().fmt(f)
+    }
+}
+
+struct Colored<'a>(&'static str, Level, &'static str, &'a str);
+
+impl std::fmt::Display for Colored<'_> {
+    #[cfg(all(feature = "colors", not(nightly_diagnostics)))]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        #[cfg(windows)]
+        static INIT: std::sync::Once = std::sync::Once::new();
+
+        #[cfg(windows)]
+        INIT.call_once(|| {
+            if cfg!(windows) && !Paint::enable_windows_ascii() {
+                Paint::disable();
+            }
+        });
+
+        use yansi::{Paint, Color};
+        let style = match self.1 {
+            Level::Error => Color::Red.style().bold(),
+            Level::Warning => Color::Yellow.style().bold(),
+            Level::Note => Color::Green.style().bold(),
+            Level::Help => Color::Cyan.style().bold(),
+        };
+
+        write!(f, "{}{}{}{}", self.0, style.paint(self.1), Paint::default(self.2).bold(), self.3)?;
+        Color::Default.style().bold().fmt_prefix(f)?;
+        Ok(())
+    }
+
+    #[cfg(not(all(feature = "colors", not(nightly_diagnostics))))]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{}{}{}", self.0, self.1, self.2, self.3)
     }
 }
 
@@ -62,18 +120,16 @@ macro_rules! diagnostic_child_methods {
         /// Adds a new child diagnostic message to `self` with the level
         /// identified by this method's name with the given `spans` and
         /// `message`.
-        pub fn $spanned<S, T>(mut self, spans: S, message: T) -> Diagnostic
+        pub fn $spanned<S, T>(self, spans: S, message: T) -> Diagnostic
             where S: MultiSpan, T: Into<String>
         {
-            self.children.push(Diagnostic::spanned(spans, $level, message));
-            self
+            self.spanned_child(spans, $level, message)
         }
 
         /// Adds a new child diagnostic message to `self` with the level
         /// identified by this method's name with the given `message`.
-        pub fn $regular<T: Into<String>>(mut self, message: T) -> Diagnostic {
-            self.children.push(Diagnostic::new($level, message));
-            self
+        pub fn $regular<T: Into<String>>(self, message: T) -> Diagnostic {
+            self.child($level, message)
         }
     )
 }
@@ -100,6 +156,22 @@ impl Diagnostic {
             spans: spans.into_spans(),
             children: vec![]
         }
+    }
+
+    /// Adds a new child diagnostic message to `self` with the `level` and the
+    /// given `spans` and `message`.
+    pub fn spanned_child<S, T>(mut self, spans: S, level: Level, message: T) -> Diagnostic
+        where S: MultiSpan, T: Into<String>
+    {
+        self.children.push(Diagnostic::spanned(spans, level, message));
+        self
+    }
+
+    /// Adds a new child diagnostic message to `self` with `level` and the given
+    /// `message`.
+    pub fn child<T: Into<String>>(mut self, level: Level, message: T) -> Diagnostic {
+        self.children.push(Diagnostic::new(level, message));
+        self
     }
 
     diagnostic_child_methods!(span_error, error, Level::Error);
@@ -141,45 +213,41 @@ impl Diagnostic {
     }
 }
 
-const WARN_PREFIX: &str = "[warning] ";
-const NOTE_PREFIX: &str = "[note] ";
-const HELP_PREFIX: &str = "[help] ";
+const NEW_PREFIX: &str = "[";
+const NEW_SUFFIX: &str = "] ";
 
-const JOINED_WARN_PREFIX: &str = "--- warning: ";
-const JOINED_NOTE_PREFIX: &str = "--- note: ";
-const JOINED_HELP_PREFIX: &str = "--- help: ";
-const JOINED_ERROR_PREFIX: &str = "--- error: ";
+const JOIN_PREFIX: &str = "--- ";
+const JOIN_SUFFIX: &str = ": ";
 
-
-impl Into<syn::parse::Error> for Diagnostic {
-    fn into(self) -> syn::parse::Error {
+impl From<Diagnostic> for syn::parse::Error {
+    fn from(diag: Diagnostic) -> syn::parse::Error {
         fn diag_to_msg(diag: &Diagnostic) -> String {
-            let spans = &diag.spans;
-            let msg_prefix = match (spans.is_empty(), diag.level) {
-                (true, Level::Warning) => JOINED_WARN_PREFIX,
-                (false, Level::Warning) => WARN_PREFIX,
-                (true, Level::Note) => JOINED_NOTE_PREFIX,
-                (false, Level::Note) => NOTE_PREFIX,
-                (true, Level::Help) => JOINED_HELP_PREFIX,
-                (false, Level::Help) => HELP_PREFIX,
-                (true, Level::Error) => JOINED_ERROR_PREFIX,
-                _ => ""
-            };
+            let (spans, level, msg) = (&diag.spans, diag.level, &diag.message);
+            if spans.is_empty() {
+                Colored(JOIN_PREFIX, level, JOIN_SUFFIX, msg).to_string()
+            } else {
+                if level == Level::Error {
+                    return msg.into();
+                }
 
-            format!("{}{}", msg_prefix, diag.message)
+                Colored(NEW_PREFIX, level, NEW_SUFFIX, msg).to_string()
+            }
         }
 
         fn diag_to_span(diag: &Diagnostic) -> Span {
             diag.spans.get(0).cloned().unwrap_or_else(|| Span::call_site())
         }
 
-        let mut span = diag_to_span(&self);
-        let mut msg = diag_to_msg(&self);
+        let mut msg = diag_to_msg(&diag);
+        let mut span = diag_to_span(&diag);
         let mut error: Option<syn::Error> = None;
-        for child in self.children {
+        for child in diag.children {
             if child.spans.is_empty() {
+                // Join to the current error we're building up.
                 msg.push_str(&format!("\n  {}", diag_to_msg(&child)));
             } else {
+                // This creates a new error with all of the diagnostic messages
+                // that have been joined thus far in `msg`.
                 let new_error = syn::parse::Error::new(span, &msg);
                 if let Some(ref mut error) = error {
                     error.combine(new_error);
@@ -187,6 +255,7 @@ impl Into<syn::parse::Error> for Diagnostic {
                     error = Some(new_error);
                 }
 
+                // Start a new error to be built from `child`.
                 span = diag_to_span(&child);
                 msg = diag_to_msg(&child);
             }
@@ -203,33 +272,29 @@ impl Into<syn::parse::Error> for Diagnostic {
 
 impl From<syn::parse::Error> for Diagnostic {
     fn from(error: syn::parse::Error) -> Diagnostic {
+        fn parse<'a>(msg: &'a str, prefix: &str, suffix: &str) -> Option<(Level, &'a str)> {
+            if msg.starts_with(prefix) {
+                let end = msg.find(suffix)?;
+                let level: Level = msg[prefix.len()..end].parse().ok()?;
+                let msg = &msg[end + suffix.len()..];
+                Some((level, msg))
+            } else {
+                None
+            }
+        }
+
         let mut diag: Option<Diagnostic> = None;
         for e in &error {
             for line in e.to_string().lines() {
                 let msg = line.trim_start();
-                if msg.starts_with(JOINED_WARN_PREFIX) {
-                    let msg = &msg[JOINED_WARN_PREFIX.len()..];
-                    diag = diag.map(|d| d.warning(msg));
-                } else if msg.starts_with(JOINED_NOTE_PREFIX) {
-                    let msg = &msg[JOINED_NOTE_PREFIX.len()..];
-                    diag = diag.map(|d| d.note(msg));
-                } else if msg.starts_with(JOINED_HELP_PREFIX) {
-                    let msg = &msg[JOINED_HELP_PREFIX.len()..];
-                    diag = diag.map(|d| d.help(msg));
-                } else if msg.starts_with(JOINED_ERROR_PREFIX) {
-                    let msg = &msg[JOINED_ERROR_PREFIX.len()..];
-                    diag = diag.map(|d| d.error(msg));
-                } else if msg.starts_with(WARN_PREFIX) {
-                    let msg = &msg[WARN_PREFIX.len()..];
-                    diag = diag.map(|d| d.span_warning(e.span(), msg)).or_else(|| Some(e.span().warning(msg)));
-                } else if msg.starts_with(NOTE_PREFIX) {
-                    let msg = &msg[NOTE_PREFIX.len()..];
-                    diag = diag.map(|d| d.span_note(e.span(), msg)).or_else(|| Some(e.span().note(msg)));
-                } else if msg.starts_with(HELP_PREFIX) {
-                    let msg = &msg[HELP_PREFIX.len()..];
-                    diag = diag.map(|d| d.span_help(e.span(), msg)).or_else(|| Some(e.span().help(msg)));
+                if let Some((level, msg)) = parse(msg, JOIN_PREFIX, JOIN_SUFFIX) {
+                    diag = diag.map(|d| d.child(level, msg));
+                } else if let Some((level, msg)) = parse(msg, NEW_PREFIX, NEW_SUFFIX) {
+                    diag = diag.map(|d| d.spanned_child(e.span(), level, msg))
+                        .or_else(|| Some(Diagnostic::spanned(e.span(), level, msg)));
                 } else {
-                    diag = diag.map(|d| d.span_error(e.span(), line)).or_else(|| Some(e.span().error(line)));
+                    diag = diag.map(|d| d.span_error(e.span(), line))
+                        .or_else(|| Some(e.span().error(line)));
                 }
             }
         }

@@ -46,3 +46,11 @@ error: unknown diagnostic kind
    |
 29 |     hello: hello,
    |     ^^^^^
+
+error: [help] this is standalone help
+  --- note: but we add things to it
+  --- help: like more help
+  --> $DIR/errors.rs:33:11
+   |
+33 |     help: this is standalone help,
+   |           ^^^^
