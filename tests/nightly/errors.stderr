@@ -1,70 +1,93 @@
-error: just an expression error
+error: just an item error
  --> $DIR/errors.rs:5:16
   |
-5 |         error: just an expression error,
-  |                ^^^^^^^^^^^^^^^^^^^^^^^^
+5 |         error: just an item error,
+  |                ^^^^^^^^^^^^^^^^^^
   |
+  = note: see an item
 help: I can help with that
- --> $DIR/errors.rs:6:15
+ --> $DIR/errors.rs:7:15
   |
-6 |         help: I can help with that,
+7 |         help: I can help with that,
   |               ^^^^^^^^^^^^^^^^^^^^
 
-error: this is an item error message
-  --> $DIR/errors.rs:11:12
+error: just an expression error item context
+  --> $DIR/errors.rs:11:16
    |
-11 |     error: this is an item error message,
+11 |         error: just an expression error item context,
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see an exp
+   = warning: kind of weird
+help: I can help with that
+  --> $DIR/errors.rs:14:15
+   |
+14 |         help: I can help with that,
+   |               ^^^^^^^^^^^^^^^^^^^^
+
+error: just an expression error expr content
+  --> $DIR/errors.rs:18:16
+   |
+18 |         error: just an expression error expr content,
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = warning: oh no
+
+error: this is an item error message
+  --> $DIR/errors.rs:24:12
+   |
+24 |     error: this is an item error message,
    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error: this is an error message
-  --> $DIR/errors.rs:15:12
+  --> $DIR/errors.rs:28:12
    |
-15 |     error: this is an error message,
+28 |     error: this is an error message,
    |            ^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: but it has a note
 
 error: hello
-  --> $DIR/errors.rs:20:12
+  --> $DIR/errors.rs:33:12
    |
-20 |     error: hello,
+33 |     error: hello,
    |            ^^^^^
    |
 warning: just wanted to warn you
-  --> $DIR/errors.rs:21:14
+  --> $DIR/errors.rs:34:14
    |
-21 |     warning: just wanted to warn you,
+34 |     warning: just wanted to warn you,
    |              ^^^^^^^^^^^^^^^^^^^^^^^
 note: just jotting things down
-  --> $DIR/errors.rs:22:11
+  --> $DIR/errors.rs:35:11
    |
-22 |     note: just jotting things down,
+35 |     note: just jotting things down,
    |           ^^^^^^^^^^^^^^^^^^^^^^^^
    = help: please help on that note
    = note: notes on notes
 
 warning: hello not found
-  --> $DIR/errors.rs:28:14
+  --> $DIR/errors.rs:41:14
    |
-28 |     warning: hello not found,
+41 |     warning: hello not found,
    |              ^^^^^^^^^^^^^^^
    |
    = note: just a note to say hi
    = help: its a good idea to say hello
 
 error: unknown diagnostic kind
-  --> $DIR/errors.rs:34:5
+  --> $DIR/errors.rs:47:5
    |
-34 |     hello: hello,
+47 |     hello: hello,
    |     ^^^^^
    |
    = help: expected one of: 'error', 'warning', 'note', 'help'
    = note: or their _ versions
 
 help: this is standalone help
-  --> $DIR/errors.rs:38:11
+  --> $DIR/errors.rs:51:11
    |
-38 |     help: this is standalone help,
+51 |     help: this is standalone help,
    |           ^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: but we add things to it

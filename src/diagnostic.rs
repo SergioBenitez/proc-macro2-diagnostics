@@ -188,36 +188,52 @@ impl Diagnostic {
         self.level
     }
 
-    fn stable_emit_as_tokens(self) -> TokenStream {
+    fn stable_emit_as_tokens(self, item: bool) -> TokenStream {
         let error: syn::parse::Error = self.into();
-        let compile_error_calls = error.into_iter().map(|e| {
-            let compile_error = e.to_compile_error();
-            quote::quote_spanned!(e.span() => #compile_error;)
-        });
+        if item {
+            error.to_compile_error()
+        } else {
+            let compile_error_calls = error.into_iter().map(|e| {
+                let compile_error = e.to_compile_error();
+                quote::quote_spanned!(e.span() => #compile_error;)
+            });
 
-        quote::quote! {
-            const _: () = {
-                #(#compile_error_calls)*
-            };
+            quote::quote!({ #(#compile_error_calls)* })
         }
     }
 
     /// Emit the diagnostic as tokens.
     #[cfg(not(nightly_diagnostics))]
-    pub fn emit_as_tokens(self) -> TokenStream {
-        self.stable_emit_as_tokens()
+    fn emit_as_tokens(self, item: bool) -> TokenStream {
+        self.stable_emit_as_tokens(item)
     }
 
     /// Emit the diagnostic as tokens.
     #[cfg(nightly_diagnostics)]
-    pub fn emit_as_tokens(self) -> TokenStream {
+    fn emit_as_tokens(self, item: bool) -> TokenStream {
         if !crate::nightly_works() {
-            return self.stable_emit_as_tokens();
+            return self.stable_emit_as_tokens(item);
         }
 
-        let nightly_diag: proc_macro::Diagnostic = self.into();
-        nightly_diag.emit();
-        TokenStream::new()
+        proc_macro::Diagnostic::from(self).emit();
+        match item {
+            true => TokenStream::new(),
+            false => quote::quote!({})
+        }
+    }
+
+    /// Emit tokens, suitable for item contexts, to generate a comple-time
+    /// diagnostic corresponding to `self`. On nightly, this directly emits the
+    /// error and returns an empty token stream.
+    pub fn emit_as_item_tokens(self) -> TokenStream {
+        self.emit_as_tokens(true)
+    }
+
+    /// Emit tokens, suitable for expression contexts, to generate a comple-time
+    /// diagnostic corresponding to `self`. On nightly, this directly emits the
+    /// error and returns a `()` token stream.
+    pub fn emit_as_expr_tokens(self) -> TokenStream {
+        self.emit_as_tokens(false)
     }
 }
 
@@ -312,35 +328,35 @@ impl From<syn::parse::Error> for Diagnostic {
 }
 
 #[cfg(nightly_diagnostics)]
-impl Into<proc_macro::Diagnostic> for Diagnostic {
-    fn into(self) -> proc_macro::Diagnostic {
+impl From<Diagnostic> for proc_macro::Diagnostic {
+    fn from(diag: Diagnostic) -> proc_macro::Diagnostic {
         fn spans_to_proc_macro_spans(spans: Vec<Span>) -> Vec<proc_macro::Span> {
             spans.into_iter()
                 .map(|s| s.unstable())
                 .collect::<Vec<proc_macro::Span>>()
         }
 
-        let spans = spans_to_proc_macro_spans(self.spans);
+        let spans = spans_to_proc_macro_spans(diag.spans);
 
-        let level = match self.level {
+        let level = match diag.level {
             Level::Error => proc_macro::Level::Error,
             Level::Warning => proc_macro::Level::Warning,
             Level::Note => proc_macro::Level::Note,
             Level::Help => proc_macro::Level::Help,
         };
 
-        let mut diag = proc_macro::Diagnostic::spanned(spans, level, self.message);
-        for child in self.children {
+        let mut proc_diag = proc_macro::Diagnostic::spanned(spans, level, diag.message);
+        for child in diag.children {
             // FIXME: proc_macro::Diagnostic needs a `push` method.
             let spans = spans_to_proc_macro_spans(child.spans);
-            diag = match child.level {
-                Level::Error => diag.span_error(spans, child.message),
-                Level::Warning => diag.span_warning(spans, child.message),
-                Level::Note => diag.span_note(spans, child.message),
-                Level::Help => diag.span_help(spans, child.message),
+            proc_diag = match child.level {
+                Level::Error => proc_diag.span_error(spans, child.message),
+                Level::Warning => proc_diag.span_warning(spans, child.message),
+                Level::Note => proc_diag.span_note(spans, child.message),
+                Level::Help => proc_diag.span_help(spans, child.message),
             };
         }
 
-        diag
+        proc_diag
     }
 }

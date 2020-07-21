@@ -1,4 +1,3 @@
-#[macro_use] extern crate quote;
 extern crate proc_macro;
 
 use proc_macro2::Span;
@@ -76,11 +75,10 @@ impl syn::parse::Parse for Invocation {
     }
 }
 
-#[proc_macro]
-pub fn diagnostic(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+fn diagnostic(tokens: proc_macro::TokenStream) -> Diagnostic {
     let input = match syn::parse::<Invocation>(tokens) {
         Ok(input) => input,
-        Err(e) => return Diagnostic::from(e).emit_as_tokens().into()
+        Err(e) => return e.into()
     };
 
     let mut diagnostic: Option<Diagnostic> = None;
@@ -109,9 +107,15 @@ pub fn diagnostic(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
     }
 
-    if let Some(diag) = diagnostic {
-        diag.emit_as_tokens().into()
-    } else {
-        quote!().into()
-    }
+    diagnostic.unwrap_or_else(|| Span::call_site().error("expected diagnostic"))
+}
+
+#[proc_macro]
+pub fn diagnostic_item(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    diagnostic(tokens).emit_as_item_tokens().into()
+}
+
+#[proc_macro]
+pub fn diagnostic_expr(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    diagnostic(tokens).emit_as_expr_tokens().into()
 }
