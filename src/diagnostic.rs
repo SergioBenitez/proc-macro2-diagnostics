@@ -2,7 +2,6 @@ use proc_macro2::{Span, TokenStream};
 
 use crate::SpanDiagnosticExt;
 
-
 /// Trait implemented by types that can be converted into a set of `Span`s.
 pub trait MultiSpan {
     /// Converts `self` into a `Vec<Span>`.
@@ -191,7 +190,16 @@ impl Diagnostic {
 
     fn stable_emit_as_tokens(self) -> TokenStream {
         let error: syn::parse::Error = self.into();
-        error.to_compile_error()
+        let compile_error_calls = error.into_iter().map(|e| {
+            let compile_error = e.to_compile_error();
+            quote::quote_spanned!(e.span() => #compile_error;)
+        });
+
+        quote::quote! {
+            const _: () = {
+                #(#compile_error_calls)*
+            };
+        }
     }
 
     /// Emit the diagnostic as tokens.

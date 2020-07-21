@@ -1,56 +1,68 @@
-error: this is an error message
- --> $DIR/errors.rs:6:12
+error: just an expression error
+ --> $DIR/errors.rs:5:16
   |
-6 |     error: this is an error message,
-  |            ^^^^
+5 |         error: just an expression error,
+  |                ^^^^
+
+error: [help] I can help with that
+ --> $DIR/errors.rs:6:15
+  |
+6 |         help: I can help with that,
+  |               ^
+
+error: this is an item error message
+  --> $DIR/errors.rs:11:12
+   |
+11 |     error: this is an item error message,
+   |            ^^^^
 
 error: this is an error message
   --- note: but it has a note
-  --> $DIR/errors.rs:10:12
+  --> $DIR/errors.rs:15:12
    |
-10 |     error: this is an error message,
+15 |     error: this is an error message,
    |            ^^^^
 
 error: hello
-  --> $DIR/errors.rs:15:12
+  --> $DIR/errors.rs:20:12
    |
-15 |     error: hello,
+20 |     error: hello,
    |            ^^^^^
 
 error: [warning] just wanted to warn you
-  --> $DIR/errors.rs:16:14
+  --> $DIR/errors.rs:21:14
    |
-16 |     warning: just wanted to warn you,
+21 |     warning: just wanted to warn you,
    |              ^^^^
 
 error: [note] just jotting things down
   --- help: please help on that note
   --- note: notes on notes
-  --> $DIR/errors.rs:17:11
+  --> $DIR/errors.rs:22:11
    |
-17 |     note: just jotting things down,
+22 |     note: just jotting things down,
    |           ^^^^
 
 error: [warning] hello not found
   --- note: just a note to say hi
   --- help: its a good idea to say hello
-  --> $DIR/errors.rs:23:14
+  --> $DIR/errors.rs:28:14
    |
-23 |     warning: hello not found,
+28 |     warning: hello not found,
    |              ^^^^^
 
 error: unknown diagnostic kind
   --- help: expected one of: 'error', 'warning', 'note', 'help'
   --- note: or their _ versions
-  --> $DIR/errors.rs:29:5
+  --> $DIR/errors.rs:34:5
    |
-29 |     hello: hello,
+34 |     hello: hello,
    |     ^^^^^
 
 error: [help] this is standalone help
   --- note: but we add things to it
   --- help: like more help
-  --> $DIR/errors.rs:33:11
+  --> $DIR/errors.rs:38:11
    |
-33 |     help: this is standalone help,
+38 |     help: this is standalone help,
    |           ^^^^

@@ -1,9 +1,14 @@
 use diagnostic_example::diagnostic;
 
-fn main() { }
+fn main() {
+    diagnostic! {
+        error: just an expression error,
+        help: I can help with that,
+    }
+}
 
 diagnostic! {
-    error: this is an error message,
+    error: this is an item error message,
 }
 
 diagnostic! {
