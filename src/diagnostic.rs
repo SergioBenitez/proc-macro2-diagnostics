@@ -1,6 +1,7 @@
 use proc_macro2::{Span, TokenStream};
 
 use crate::SpanDiagnosticExt;
+use crate::line::Line;
 
 /// Trait implemented by types that can be converted into a set of `Span`s.
 pub trait MultiSpan {
@@ -70,40 +71,6 @@ impl std::fmt::Display for Level {
     }
 }
 
-struct Colored<'a>(&'static str, Level, &'static str, &'a str);
-
-impl std::fmt::Display for Colored<'_> {
-    #[cfg(all(feature = "colors", not(nightly_diagnostics)))]
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        #[cfg(windows)]
-        static INIT: std::sync::Once = std::sync::Once::new();
-
-        #[cfg(windows)]
-        INIT.call_once(|| {
-            if cfg!(windows) && !Paint::enable_windows_ascii() {
-                Paint::disable();
-            }
-        });
-
-        use yansi::{Paint, Color};
-        let style = match self.1 {
-            Level::Error => Color::Red.style().bold(),
-            Level::Warning => Color::Yellow.style().bold(),
-            Level::Note => Color::Green.style().bold(),
-            Level::Help => Color::Cyan.style().bold(),
-        };
-
-        write!(f, "{}{}{}{}", self.0, style.paint(self.1), Paint::default(self.2).bold(), self.3)?;
-        Color::Default.style().bold().fmt_prefix(f)?;
-        Ok(())
-    }
-
-    #[cfg(not(all(feature = "colors", not(nightly_diagnostics))))]
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}{}{}", self.0, self.1, self.2, self.3)
-    }
-}
-
 /// A structure representing a diagnostic message and associated children
 /// messages.
 #[derive(Clone, Debug)]
@@ -137,7 +104,7 @@ impl Diagnostic {
     /// Creates a new diagnostic with the given `level` and `message`.
     pub fn new<T: Into<String>>(level: Level, message: T) -> Diagnostic {
         Diagnostic {
-            level: level,
+            level,
             message: message.into(),
             spans: vec![],
             children: vec![]
@@ -150,7 +117,7 @@ impl Diagnostic {
         where S: MultiSpan, T: Into<String>
     {
         Diagnostic {
-            level: level,
+            level,
             message: message.into(),
             spans: spans.into_spans(),
             children: vec![]
@@ -237,24 +204,18 @@ impl Diagnostic {
     }
 }
 
-const NEW_PREFIX: &str = "[";
-const NEW_SUFFIX: &str = "] ";
-
-const JOIN_PREFIX: &str = "--- ";
-const JOIN_SUFFIX: &str = ": ";
-
 impl From<Diagnostic> for syn::parse::Error {
     fn from(diag: Diagnostic) -> syn::parse::Error {
         fn diag_to_msg(diag: &Diagnostic) -> String {
             let (spans, level, msg) = (&diag.spans, diag.level, &diag.message);
             if spans.is_empty() {
-                Colored(JOIN_PREFIX, level, JOIN_SUFFIX, msg).to_string()
+                Line::joined(level, msg).to_string()
             } else {
                 if level == Level::Error {
                     return msg.into();
                 }
 
-                Colored(NEW_PREFIX, level, NEW_SUFFIX, msg).to_string()
+                Line::new(level, msg).to_string()
             }
         }
 
@@ -296,26 +257,16 @@ impl From<Diagnostic> for syn::parse::Error {
 
 impl From<syn::parse::Error> for Diagnostic {
     fn from(error: syn::parse::Error) -> Diagnostic {
-        fn parse<'a>(msg: &'a str, prefix: &str, suffix: &str) -> Option<(Level, &'a str)> {
-            if msg.starts_with(prefix) {
-                let end = msg.find(suffix)?;
-                let level: Level = msg[prefix.len()..end].parse().ok()?;
-                let msg = &msg[end + suffix.len()..];
-                Some((level, msg))
-            } else {
-                None
-            }
-        }
-
         let mut diag: Option<Diagnostic> = None;
         for e in &error {
             for line in e.to_string().lines() {
-                let msg = line.trim_start();
-                if let Some((level, msg)) = parse(msg, JOIN_PREFIX, JOIN_SUFFIX) {
-                    diag = diag.map(|d| d.child(level, msg));
-                } else if let Some((level, msg)) = parse(msg, NEW_PREFIX, NEW_SUFFIX) {
-                    diag = diag.map(|d| d.spanned_child(e.span(), level, msg))
-                        .or_else(|| Some(Diagnostic::spanned(e.span(), level, msg)));
+                if let Some(line) = Line::parse(line) {
+                    if line.is_new() {
+                        diag = diag.map(|d| d.spanned_child(e.span(), line.level, line.msg))
+                            .or_else(|| Some(Diagnostic::spanned(e.span(), line.level, line.msg)));
+                    } else {
+                        diag = diag.map(|d| d.child(line.level, line.msg));
+                    }
                 } else {
                     diag = diag.map(|d| d.span_error(e.span(), line))
                         .or_else(|| Some(e.span().error(line)));

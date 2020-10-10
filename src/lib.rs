@@ -4,6 +4,7 @@ extern crate proc_macro;
 
 mod ext;
 mod diagnostic;
+mod line;
 
 pub use diagnostic::{Diagnostic, Level};
 pub use ext::SpanDiagnosticExt;
