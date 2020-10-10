@@ -8,7 +8,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! proc_macro2_diagnostics = "0.1"
+//! proc_macro2_diagnostics = "0.9"
 //! ```
 //!
 //! 2. Import [`SpanDiagnosticExt`] and use its methods on a
@@ -61,7 +61,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! proc_macro2_diagnostics = { version = "0.1", default-features = false }
+//! proc_macro2_diagnostics = { version = "0.9", default-features = false }
 //! ```
 //!
 //! The compiler always colors diagnostics on nightly.
