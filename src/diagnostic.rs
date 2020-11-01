@@ -171,36 +171,47 @@ impl Diagnostic {
 
     /// Emit the diagnostic as tokens.
     #[cfg(not(nightly_diagnostics))]
-    fn emit_as_tokens(self, item: bool) -> TokenStream {
+    fn emit_as_tokens(self, item: bool, _: TokenStream) -> TokenStream {
         self.stable_emit_as_tokens(item)
     }
 
     /// Emit the diagnostic as tokens.
     #[cfg(nightly_diagnostics)]
-    fn emit_as_tokens(self, item: bool) -> TokenStream {
+    fn emit_as_tokens(self, item: bool, default: TokenStream) -> TokenStream {
         if !crate::nightly_works() {
             return self.stable_emit_as_tokens(item);
         }
 
         proc_macro::Diagnostic::from(self).emit();
-        match item {
-            true => TokenStream::new(),
-            false => quote::quote!({})
-        }
+        default
     }
 
     /// Emit tokens, suitable for item contexts, to generate a comple-time
     /// diagnostic corresponding to `self`. On nightly, this directly emits the
     /// error and returns an empty token stream.
     pub fn emit_as_item_tokens(self) -> TokenStream {
-        self.emit_as_tokens(true)
+        self.emit_as_tokens(true, TokenStream::new())
+    }
+
+    /// Emit tokens, suitable for item contexts, to generate a comple-time
+    /// diagnostic corresponding to `self`. On nightly, this directly emits the
+    /// error and returns `default`.
+    pub fn emit_as_item_tokens_or(self, default: TokenStream) -> TokenStream {
+        self.emit_as_tokens(true, default)
     }
 
     /// Emit tokens, suitable for expression contexts, to generate a comple-time
     /// diagnostic corresponding to `self`. On nightly, this directly emits the
     /// error and returns a `()` token stream.
     pub fn emit_as_expr_tokens(self) -> TokenStream {
-        self.emit_as_tokens(false)
+        self.emit_as_tokens(false, quote::quote!({}))
+    }
+
+    /// Emit tokens, suitable for expressioon contexts, to generate a
+    /// comple-time diagnostic corresponding to `self`. On nightly, this
+    /// directly emits the error and returns `default`.
+    pub fn emit_as_expr_tokens_or(self, default: TokenStream) -> TokenStream {
+        self.emit_as_tokens(false, default)
     }
 }
 
