@@ -1,6 +1,6 @@
 [package]
 name = "diagnostic-example"
-version = "0.9.1"
+version = "0.0.0"
 authors = ["Sergio Benitez <sb@sergio.bz>"]
 edition = "2018"
 publish = false
