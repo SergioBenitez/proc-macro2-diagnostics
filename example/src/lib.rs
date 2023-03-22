@@ -71,7 +71,7 @@ impl syn::parse::Parse for Item {
 
 impl syn::parse::Parse for Invocation {
     fn parse(input: syn::parse::ParseStream) -> syn::parse::Result<Self> {
-        Ok(Invocation { items: input.parse_terminated(Item::parse)?, })
+        Ok(Invocation { items: input.parse_terminated(Item::parse, syn::Token![,])?, })
     }
 }
 
