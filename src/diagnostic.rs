@@ -240,7 +240,7 @@ impl From<Diagnostic> for syn::parse::Error {
         for child in diag.children {
             if child.spans.is_empty() {
                 // Join to the current error we're building up.
-                msg.push_str(&format!("\n  {}", diag_to_msg(&child)));
+                msg.push_str(&format!("\n{}", diag_to_msg(&child)));
             } else {
                 // This creates a new error with all of the diagnostic messages
                 // that have been joined thus far in `msg`.

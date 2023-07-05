@@ -13,7 +13,7 @@ impl Kind {
     fn raw_split(self) -> (Cow<'static, str>, Cow<'static, str>) {
         match self {
             Kind::New => ("[".into(), "] ".into()),
-            Kind::Joined => ("--- ".into(), ": ".into()),
+            Kind::Joined => ("= ".into(), ": ".into()),
         }
     }
 
@@ -24,11 +24,15 @@ impl Kind {
 
     #[cfg(all(feature = "colors", not(nightly_diagnostics)))]
     fn split(self) -> (Cow<'static, str>, Cow<'static, str>) {
-        let style = yansi::Color::Blue.style().bold();
+        use yansi::Paint;
+
         let (prefix, suffix) = self.raw_split();
-        let prefix = style.paint(prefix).to_string().into();
-        let suffix = style.paint(suffix).to_string().into();
-        (prefix, suffix)
+        let (prefix, suffix) = match self {
+            Kind::New => (prefix.blue().bold(), suffix.blue().bold()),
+            Kind::Joined => (prefix.blue().bold(), suffix.primary()),
+        };
+
+        (prefix.to_string().into(), suffix.to_string().into())
     }
 }
 
@@ -73,28 +77,16 @@ impl<'a> Line<'a> {
 impl fmt::Display for Line<'_> {
     #[cfg(all(feature = "colors", not(nightly_diagnostics)))]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        #[cfg(windows)]
-        static INIT: std::sync::Once = std::sync::Once::new();
-
-        #[cfg(windows)]
-        INIT.call_once(|| {
-            if cfg!(windows) && !Paint::enable_windows_ascii() {
-                Paint::disable();
-            }
-        });
-
         use yansi::{Paint, Color};
         let style = match self.level {
-            Level::Error => Color::Red.style().bold(),
-            Level::Warning => Color::Yellow.style().bold(),
-            Level::Note => Color::Green.style().bold(),
-            Level::Help => Color::Cyan.style().bold(),
+            Level::Error => Color::Red.bold(),
+            Level::Warning => Color::Yellow.bold(),
+            Level::Note => Color::Green.bold(),
+            Level::Help => Color::Cyan.bold(),
         };
 
-        let ((prefix, suffix), msg) = (self.kind.split(), Paint::default(self.msg));
-        write!(f, "{}{}{}{}", prefix, style.paint(self.level), suffix, msg)?;
-        Color::Default.style().bold().fmt_prefix(f)?;
-        Ok(())
+        let ((prefix, suffix), msg) = (self.kind.split(), self.msg.primary());
+        write!(f, "{}{}{}{}", prefix, self.level.paint(style), suffix, msg.bold())
     }
 
     #[cfg(not(all(feature = "colors", not(nightly_diagnostics))))]
