@@ -1,5 +1,5 @@
 error: just an item error
-         --- note: see an item
+       = note: see an item
  --> tests/stable/errors.rs:5:16
   |
 5 |         error: just an item error,
@@ -12,8 +12,8 @@ error: [help] I can help with that
   |               ^
 
 error: just an expression error item context
-         --- note: see an exp
-         --- warning: kind of weird
+       = note: see an exp
+       = warning: kind of weird
   --> tests/stable/errors.rs:11:16
    |
 11 |         error: just an expression error item context,
@@ -26,7 +26,7 @@ error: [help] I can help with that
    |               ^
 
 error: just an expression error expr content
-         --- warning: oh no
+       = warning: oh no
   --> tests/stable/errors.rs:18:16
    |
 18 |         error: just an expression error expr content,
@@ -39,7 +39,7 @@ error: this is an item error message
    |            ^^^^
 
 error: this is an error message
-         --- note: but it has a note
+       = note: but it has a note
   --> tests/stable/errors.rs:28:12
    |
 28 |     error: this is an error message,
@@ -58,32 +58,32 @@ error: [warning] just wanted to warn you
    |              ^^^^
 
 error: [note] just jotting things down
-         --- help: please help on that note
-         --- note: notes on notes
+       = help: please help on that note
+       = note: notes on notes
   --> tests/stable/errors.rs:35:11
    |
 35 |     note: just jotting things down,
    |           ^^^^
 
 error: [warning] hello not found
-         --- note: just a note to say hi
-         --- help: its a good idea to say hello
+       = note: just a note to say hi
+       = help: its a good idea to say hello
   --> tests/stable/errors.rs:41:14
    |
 41 |     warning: hello not found,
    |              ^^^^^
 
 error: unknown diagnostic kind
-         --- help: expected one of: 'error', 'warning', 'note', 'help'
-         --- note: or their _ versions
+       = help: expected one of: 'error', 'warning', 'note', 'help'
+       = note: or their _ versions
   --> tests/stable/errors.rs:47:5
    |
 47 |     hello: hello,
    |     ^^^^^
 
 error: [help] this is standalone help
-         --- note: but we add things to it
-         --- help: like more help
+       = note: but we add things to it
+       = help: like more help
   --> tests/stable/errors.rs:51:11
    |
 51 |     help: this is standalone help,
