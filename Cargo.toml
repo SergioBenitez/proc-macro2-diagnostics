@@ -17,8 +17,12 @@ colors = ["yansi"]
 [dependencies]
 quote = "1.0"
 proc-macro2 = "1.0"
-syn = "2.0"
 yansi = { version = "1.0.0-rc", optional = true }
+
+[dependencies.syn]
+version = "2"
+default-features = false
+features = ["parsing", "printing"]
 
 [build-dependencies]
 version_check = "0.9.4"
@@ -26,3 +30,7 @@ version_check = "0.9.4"
 [dev-dependencies]
 trybuild = "1.0"
 diagnostic-example = { path = "example/" }
+
+[workspace]
+# Needed to keep features for dependencies & dev-dependencies seperate
+resolver = "2"
