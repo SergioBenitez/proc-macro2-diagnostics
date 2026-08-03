@@ -20,7 +20,7 @@ proc-macro2 = "1.0"
 yansi = { version = "1.0.1", optional = true }
 
 [dependencies.syn]
-version = "2"
+version = "3"
 default-features = false
 features = ["parsing", "printing"]
 
