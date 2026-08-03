@@ -34,3 +34,6 @@ diagnostic-example = { path = "example/" }
 [workspace]
 # Needed to keep features for dependencies & dev-dependencies seperate
 resolver = "2"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(nightly_diagnostics)'] }
