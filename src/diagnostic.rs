@@ -17,7 +17,7 @@ impl MultiSpan for Vec<Span> {
     fn into_spans(self) -> Vec<Span> { self }
 }
 
-impl<'a> MultiSpan for &'a [Span] {
+impl MultiSpan for &[Span] {
     fn into_spans(self) -> Vec<Span> {
         self.to_vec()
     }
@@ -231,7 +231,7 @@ impl From<Diagnostic> for syn::parse::Error {
         }
 
         fn diag_to_span(diag: &Diagnostic) -> Span {
-            diag.spans.get(0).cloned().unwrap_or_else(|| Span::call_site())
+            diag.spans.first().cloned().unwrap_or_else(Span::call_site)
         }
 
         let mut msg = diag_to_msg(&diag);
