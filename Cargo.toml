@@ -10,14 +10,9 @@ repository = "https://github.com/SergioBenitez/proc-macro2-diagnostics"
 homepage = "https://github.com/SergioBenitez/proc-macro2-diagnostics"
 documentation = "https://docs.rs/proc-macro2-diagnostics"
 
-[features]
-default = ["colors"]
-colors = ["yansi"]
-
 [dependencies]
 quote = "1.0"
 proc-macro2 = "1.0"
-yansi = { version = "1.0.1", optional = true }
 
 [dependencies.syn]
 version = "3"

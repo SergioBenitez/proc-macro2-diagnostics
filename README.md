@@ -52,15 +52,9 @@ to `cfg`-gate emitting non-error diagnostics to nightly.
 
 ### Colors
 
-By default, error messages are colored on stable. To disable, disable
-default features:
-
-```toml
-[dependencies]
-proc-macro2-diagnostics = { version = "0.10", default-features = false }
-```
-
-The compiler always colors diagnostics on nightly.
+The compiler controls diagnostic coloring on both stable and nightly. Use
+Cargo's `--color=always` or `--color=never` to override automatic coloring. On
+stable, `note`, `help`, and `warning` labels do not receive separate colors.
 
 ## License
 
