@@ -160,12 +160,8 @@ impl Diagnostic {
         if item {
             error.to_compile_error()
         } else {
-            let compile_error_calls = error.into_iter().map(|e| {
-                let compile_error = e.to_compile_error();
-                quote::quote_spanned!(e.span() => #compile_error;)
-            });
-
-            quote::quote!({ #(#compile_error_calls)* })
+            let compile_error_calls = error.into_iter().map(|e| e.to_compile_error());
+            quote::quote!(::core::concat! { #(#compile_error_calls),* })
         }
     }
 

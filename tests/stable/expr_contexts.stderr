@@ -1,0 +1,43 @@
+error: single
+ --> tests/stable/expr_contexts.rs:3:27
+  |
+3 | diagnostic_expr! { error: single }
+  |                           ^^^^^^
+
+error: first
+ --> tests/stable/expr_contexts.rs:6:12
+  |
+6 |     error: first,
+  |            ^^^^^
+
+error: [note] second
+       = help: more detail
+ --> tests/stable/expr_contexts.rs:7:11
+  |
+7 |     note: second,
+  |           ^^^^^^
+
+error: [warning] third
+ --> tests/stable/expr_contexts.rs:9:14
+  |
+9 |     warning: third,
+  |              ^^^^^
+
+error: first
+  --> tests/stable/expr_contexts.rs:14:16
+   |
+14 |         error: first,
+   |                ^^^^^
+
+error: [note] second
+       = help: more detail
+  --> tests/stable/expr_contexts.rs:15:15
+   |
+15 |         note: second,
+   |               ^^^^^^
+
+error: [warning] third
+  --> tests/stable/expr_contexts.rs:17:18
+   |
+17 |         warning: third,
+   |                  ^^^^^
