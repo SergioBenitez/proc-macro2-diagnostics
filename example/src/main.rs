@@ -14,7 +14,7 @@ fn main() {
         help: I can help with that,
     }
 
-    let x = diagnostic_expr! {
+    let _x = diagnostic_expr! {
         error: just an expression error expr content,
         _warning: oh no,
     };

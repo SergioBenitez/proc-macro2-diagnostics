@@ -48,17 +48,30 @@
 //!
 //! This does the right thing on nightly _or_ stable.
 //!
-//! # Caveats
+//! ### Caveats and Nightly
 //!
-//! On stable, due to limitations, any top-level, non-error diagnostics are
-//! emitted as errors. This will abort compilation. To avoid this, you may want
-//! to `cfg`-gate emitting non-error diagnostics to nightly.
+//! By default, diagnostics use stable APIs irrespective of the running
+//! compiler. Due to limitations with stable APIs, any top-level, non-error
+//! diagnostic is emitted as an error, which will immediately abort compilation.
+//! On a stable compiler, this cannot be avoided: you may want to `cfg`-gate
+//! emitting non-error diagnostics to nightly. On nightly, you can opt-in to
+//! using nightly APIs by enabling the `nightly` feature:
+//!
+//! ```toml
+//! proc-macro2-diagnostics = { version = "0.11", features = ["nightly"] }
+//! ```
+//!
+//! Aside from supporting non-error top-level diagnostics, nightly APIs allow
+//! for more precise error attribution, at the cost of using unstable compiler
+//! APIs, which may change or break future compilation. Enabling the feature on
+//! stable has no effect.
 //!
 //! # Colors
 //!
-//! The compiler controls diagnostic colors on both stable and nightly. Use
+//! The compiler controls diagnostic coloring on both stable and nightly. Use
 //! Cargo's `--color=always` or `--color=never` to override automatic coloring.
-//! On stable, note, help, and warning labels do not receive separate colors.
+//! When stable APIs are in use, `note`, `help`, and `warning` labels are never
+//! colored.
 
 extern crate proc_macro;
 

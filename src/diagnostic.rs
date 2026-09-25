@@ -182,30 +182,30 @@ impl Diagnostic {
         default
     }
 
-    /// Emit tokens, suitable for item contexts, to generate a comple-time
-    /// diagnostic corresponding to `self`. On nightly, this directly emits the
-    /// error and returns an empty token stream.
+    /// Emit tokens, suitable for item contexts, to generate a compile-time
+    /// diagnostic corresponding to `self`. On nightly with the `nightly` feature
+    /// enabled, this directly emits the diagnostic and returns an empty token stream.
     pub fn emit_as_item_tokens(self) -> TokenStream {
         self.emit_as_tokens(true, TokenStream::new())
     }
 
-    /// Emit tokens, suitable for item contexts, to generate a comple-time
-    /// diagnostic corresponding to `self`. On nightly, this directly emits the
-    /// error and returns `default`.
+    /// Emit tokens, suitable for item contexts, to generate a compile-time
+    /// diagnostic corresponding to `self`. On nightly with the `nightly` feature
+    /// enabled, this directly emits the diagnostic and returns `default`.
     pub fn emit_as_item_tokens_or(self, default: TokenStream) -> TokenStream {
         self.emit_as_tokens(true, default)
     }
 
-    /// Emit tokens, suitable for expression contexts, to generate a comple-time
-    /// diagnostic corresponding to `self`. On nightly, this directly emits the
-    /// error and returns a `()` token stream.
+    /// Emit tokens, suitable for expression contexts, to generate a compile-time
+    /// diagnostic corresponding to `self`. On nightly with the `nightly` feature
+    /// enabled, this directly emits the diagnostic and returns a `()` token stream.
     pub fn emit_as_expr_tokens(self) -> TokenStream {
         self.emit_as_tokens(false, quote::quote!({}))
     }
 
-    /// Emit tokens, suitable for expressioon contexts, to generate a
-    /// comple-time diagnostic corresponding to `self`. On nightly, this
-    /// directly emits the error and returns `default`.
+    /// Emit tokens, suitable for expression contexts, to generate a compile-time
+    /// diagnostic corresponding to `self`. On nightly with the `nightly` feature
+    /// enabled, this directly emits the diagnostic and returns `default`.
     pub fn emit_as_expr_tokens_or(self, default: TokenStream) -> TokenStream {
         self.emit_as_tokens(false, default)
     }

@@ -1,0 +1,11 @@
+error: [warning] caution
+ --> tests/nightly-stable/fail/warning.rs:3:29
+  |
+3 | diagnostic_item! { warning: caution }
+  |                             ^^^^^^^
+
+error: [warning] caution
+ --> tests/nightly-stable/fail/warning.rs:6:45
+  |
+6 |     let _: () = diagnostic_expr! { warning: caution };
+  |                                             ^^^^^^^

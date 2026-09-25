@@ -1,0 +1,1 @@
+../../stable/fail/warning.rs

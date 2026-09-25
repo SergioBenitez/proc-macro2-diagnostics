@@ -1,0 +1,94 @@
+error: just an item error
+ --> tests/nightly/fail/errors.rs:5:16
+  |
+5 |         error: just an item error,
+  |                ^^^^^^^^^^^^^^^^^^
+  |
+  = note: see an item
+help: I can help with that
+ --> tests/nightly/fail/errors.rs:7:15
+  |
+7 |         help: I can help with that,
+  |               ^^^^^^^^^^^^^^^^^^^^
+
+error: just an expression error item context
+  --> tests/nightly/fail/errors.rs:11:16
+   |
+11 |         error: just an expression error item context,
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: see an exp
+   = warning: kind of weird
+help: I can help with that
+  --> tests/nightly/fail/errors.rs:14:15
+   |
+14 |         help: I can help with that,
+   |               ^^^^^^^^^^^^^^^^^^^^
+
+error: just an expression error expr content
+  --> tests/nightly/fail/errors.rs:18:16
+   |
+18 |         error: just an expression error expr content,
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = warning: oh no
+
+error: this is an item error message
+  --> tests/nightly/fail/errors.rs:24:12
+   |
+24 |     error: this is an item error message,
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: this is an error message
+  --> tests/nightly/fail/errors.rs:28:12
+   |
+28 |     error: this is an error message,
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: but it has a note
+
+error: hello
+  --> tests/nightly/fail/errors.rs:33:12
+   |
+33 |     error: hello,
+   |            ^^^^^
+   |
+warning: just wanted to warn you
+  --> tests/nightly/fail/errors.rs:34:14
+   |
+34 |     warning: just wanted to warn you,
+   |              ^^^^^^^^^^^^^^^^^^^^^^^
+note: just jotting things down
+  --> tests/nightly/fail/errors.rs:35:11
+   |
+35 |     note: just jotting things down,
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: please help on that note
+   = note: notes on notes
+
+warning: hello not found
+  --> tests/nightly/fail/errors.rs:41:14
+   |
+41 |     warning: hello not found,
+   |              ^^^^^^^^^^^^^^^
+   |
+   = note: just a note to say hi
+   = help: its a good idea to say hello
+
+error: unknown diagnostic kind
+  --> tests/nightly/fail/errors.rs:47:5
+   |
+47 |     hello: hello,
+   |     ^^^^^
+   |
+   = help: expected one of: 'error', 'warning', 'note', 'help'
+   = note: or their _ versions
+
+help: this is standalone help
+  --> tests/nightly/fail/errors.rs:51:11
+   |
+51 |     help: this is standalone help,
+   |           ^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: but we add things to it
+   = help: like more help
