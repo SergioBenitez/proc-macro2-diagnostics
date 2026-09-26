@@ -8,7 +8,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! proc_macro2_diagnostics = "0.10"
+//! proc_macro2_diagnostics = "0.11"
 //! ```
 //!
 //! 2. Import [`SpanDiagnosticExt`] and use its methods on a

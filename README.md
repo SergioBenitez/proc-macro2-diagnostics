@@ -13,7 +13,7 @@ Diagnostics for stable and nightly proc-macros!
 
 ```toml
 [dependencies]
-proc-macro2-diagnostics = "0.10"
+proc-macro2-diagnostics = "0.11"
 ```
 
 2. Import `SpanDiagnosticExt` and use its methods on a `proc_macro2::Span` to
