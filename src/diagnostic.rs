@@ -17,7 +17,7 @@ impl MultiSpan for Vec<Span> {
     fn into_spans(self) -> Vec<Span> { self }
 }
 
-impl<'a> MultiSpan for &'a [Span] {
+impl MultiSpan for &[Span] {
     fn into_spans(self) -> Vec<Span> {
         self.to_vec()
     }
@@ -174,7 +174,7 @@ impl Diagnostic {
     /// Emit the diagnostic as tokens.
     #[cfg(nightly_diagnostics)]
     fn emit_as_tokens(self, item: bool, default: TokenStream) -> TokenStream {
-        if !crate::nightly_works() {
+        if !proc_macro::is_available() {
             return self.stable_emit_as_tokens(item);
         }
 
@@ -227,7 +227,7 @@ impl From<Diagnostic> for syn::parse::Error {
         }
 
         fn diag_to_span(diag: &Diagnostic) -> Span {
-            diag.spans.get(0).cloned().unwrap_or_else(|| Span::call_site())
+            diag.spans.first().copied().unwrap_or_else(Span::call_site)
         }
 
         let mut msg = diag_to_msg(&diag);
